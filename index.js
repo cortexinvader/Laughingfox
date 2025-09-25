@@ -2,14 +2,15 @@ import { spawn } from "child_process";
 import log from "./utils/log.js";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import autoRestart from "./utils/autoRestart.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function start() {
+    autoRestart()
     const bot = spawn("node", ["fox.js"], {
         cwd: __dirname,
-        stdio: "inherit",
-        shell: true
+        stdio: "inherit"
     });
 
     bot.on("close", code => {
