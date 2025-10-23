@@ -3,8 +3,9 @@ import fs from 'fs';
 import { promises as fsp } from 'fs';
 import path from 'path';
 import FormData from 'form-data'; 
+import log from "./log.js";
 
-class LanceCDNClient {
+class foxcdnClient {
     constructor() {
         this.apiKey = null;
         this.baseUrl = null;
@@ -18,12 +19,12 @@ class LanceCDNClient {
         this.apiKey = apiKey;
         this.baseUrl = deployedUrl.replace(/\/$/, ''); 
         this.isInitialized = true;
-        console.log(`LanceCDN connected to: ${this.baseUrl}`);
+        log.success(`foxcdn connected to: ${this.baseUrl}`);
     }
 
     _checkInitialized() {
         if (!this.isInitialized) {
-            throw new Error('LanceCDN Client is not initialized. Call lancecdn.connect(apiKey, url) first.');
+            throw new Error('foxcdn Client is not initialized. Call foxcdn.connect(apiKey, url) first.');
         }
     }
 
@@ -65,7 +66,7 @@ class LanceCDNClient {
             return response;
 
         } catch (error) {
-            console.error(`Request to ${url} failed:`, error.message);
+            log.error(`Request to ${url} failed:`, error.message);
             throw error;
         }
     }
@@ -109,12 +110,12 @@ class LanceCDNClient {
         const contentDisposition = response.headers.get('content-disposition');
         let filename = path.basename(downloadPath);
 
-        if (contentDisposition && contentDisposition.includes('filename=')) {
+        /*if (contentDisposition && contentDisposition.includes('filename=')) {
             const match = contentDisposition.match(/filename="?([^"]+)"?/i);
             if (match && match[1]) {
                 filename = match[1];
             }
-        }
+        }*/
 
         const finalPath = path.join(path.dirname(downloadPath), filename);
         await fsp.mkdir(path.dirname(finalPath), { recursive: true }); 
@@ -177,9 +178,9 @@ class LanceCDNClient {
     }
 }
 
-const clientInstance = new LanceCDNClient();
+const clientInstance = new foxcdnClient();
 
-const lancecdn = {
+const foxcdn = {
     connect: clientInstance.connect.bind(clientInstance),
     download: clientInstance.download.bind(clientInstance),
     upload: clientInstance.upload.bind(clientInstance),
@@ -188,4 +189,4 @@ const lancecdn = {
     editContent: clientInstance.editContent.bind(clientInstance),
 };
 
-export default lancecdn;
+export default foxcdn;
