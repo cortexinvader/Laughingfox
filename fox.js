@@ -13,6 +13,7 @@ import db from "./utils/data.js";
 import cron from "node-cron";
 import moment from "moment-timezone";
 import { fileURLToPath } from "url";
+import axios from "axios";
 
 dotenv.config();
 const __dirname = dirname(fileURLToPath(import.meta.url));
