@@ -54,16 +54,16 @@ class WhatsAppBot extends BaseBot {
          throw new Error("Please add your session to SESSION_ID in config!");
       }
       const sessdata = this.config.SESSION_ID.replace("sypher™--", "");
-      const response =  await axios.get(`https://whole-hermione-lance-ui-0c243c4c.koyeb.app/download/${sessdata}`);
+      const response =  await axios.get(`https://whole-hermione-lance-ui-0c243c4c.koyeb.app/download/${sessdata}`, { responseType: 'stream' });
       if (response.status === 404) {
           throw new Error(`File with identifier ${sessdata} not found.`);
       }
       const writer = await fs.createWriteStream(`${this.sessionDir}/creds.json`);
-      response.body.pipe(writer);
+      response.data.pipe(writer);
       return new Promise((resolve, reject) => {
             writer.on("finish", () => {
                 log.success("creds file downloaded successfully");
-                resolve(finalPath);
+                resolve();
             });
             writer.on("error", () => {
                 log.error("failed to download file");
