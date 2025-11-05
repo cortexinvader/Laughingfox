@@ -78,7 +78,7 @@ class MessageHandler {
 
       await Promise.all([
 
-        handleDatabase({ threadID, senderID, sock: this.sock }),
+        handleDatabase({ threadID, senderID, sock: this.sock, event }),
 
         handleOnReply({ sock: this.sock, event, threadID, senderID, proto: this.proto, font: this.font, bot, message, args, dataCache, saveTable, getTable, getUserData, getgroupData, getUserMoney, setuserBanned, setgroupBanned }),
 
@@ -116,7 +116,7 @@ class MessageHandler {
 
       if (global.client.config.whitelist.status &&
 
-          !global.client.config.whitelist.ids.includes(senderID.split("@")[0])) return;
+        !global.client.config.whitelist.ids.includes(senderID.split("@")[0])) return;
 
       const message = {
         send: async form => {

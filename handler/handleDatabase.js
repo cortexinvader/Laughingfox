@@ -56,14 +56,14 @@ process.on('SIGUSR1', shutdown);
 process.on('SIGUSR2', shutdown);
 process.on('exit', () => {});
 
-const handleDatabase = async ({ threadID, senderID, sock }) => {
+const handleDatabase = async ({ threadID, senderID, sock, event }) => {
   try {
     if (!userMoneyMap.has(senderID)) {
       userMoneyMap.set(senderID, { id: senderID, money: 0, msgCount: 0 });
     }
 
     if (!userDataMap.has(senderID)) {
-      userDataMap.set(senderID, { id: senderID, name: "Unknown" });
+      userDataMap.set(senderID, { id: senderID, name: event.pushName || "unknown" });
     }
 
     if (!prefixesDataMap.has(threadID)) {

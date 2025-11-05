@@ -3,7 +3,7 @@
   "number": "",
   "admins": [],
   "PREFIX": "-",
-  "SESSION_ID": "sypher™--c940ac906dfbd47eacd02610945c402f",
+  "SESSION_ID": "sypher™--hash",
   "PORT": 8080,
   "autoload": true,
   "keys": {
@@ -13,5 +13,9 @@
   "unloadedCmds": [
     "credits to lance"
   ],
-  "botname": "sypher"
+  "botname": "sypher",
+  "whitelist": {
+    "ids": [],
+    "status": false
+  }
 }

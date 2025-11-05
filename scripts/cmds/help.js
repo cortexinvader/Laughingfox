@@ -17,30 +17,17 @@ export default {
     category: "utility",
   },
   onRun: async ({ sock, font, args, message, threadID, event }) => {
-    const imagesPath = path.join(__dirname, "..", "..", "cache", "tmp");
-    const images = fs
-      .readdirSync(imagesPath)
-      .filter(
-        (file) =>
-          file.endsWith(".png") ||
-          file.endsWith(".jpg") ||
-          file.endsWith(".webp")
-      );
-    const randomImage = images[Math.floor(Math.random() * images.length)];
-    const imagePath = path.join(
-      __dirname,
-      "..",
-      "..",
-      "cache",
-      "tmp",
-      randomImage
-    );
-
+    const bannerUrls = [
+      "https://i.imgur.com/8Km9tLL.jpg",
+      "https://i.imgur.com/3ZQ3Z4V.jpg",
+      "https://i.imgur.com/2nCt3Sbl.jpg",
+    ];
+    const imageUrl = bannerUrls[Math.floor(Math.random() * bannerUrls.length)];
     const commands = Array.from(global.client.commands.values());
+
     if (args.length > 0 && !isNaN(args[0])) {
       const pageSize = 20;
-      let page = parseInt(args[0], 10) || 1;
-      if (page < 1) page = 1;
+      let page = Math.max(1, parseInt(args[0], 10) || 1);
 
       const categories = {};
       for (const cmd of commands) {
@@ -52,81 +39,93 @@ export default {
       const sortedCats = Object.keys(categories).sort();
       let allLines = [];
       for (const cat of sortedCats) {
-        allLines.push(`\n${font.bold(cat)}:`);
+        allLines.push(`${font.bold(cat)}:`);
         allLines.push(
           ...categories[cat].map(
             (cmd) =>
-              `  • ${font.mono(cmd.config.name)}: ${
-                cmd.config.description || "no description"
-              }`
+              `  • ${font.mono(cmd.config.name)} — ${cmd.config.description || "no description"}`
           )
         );
       }
 
-      const totalPages = Math.ceil(allLines.length / pageSize);
+      const totalPages = Math.max(1, Math.ceil(allLines.length / pageSize));
       if (page > totalPages) page = totalPages;
-
       const start = (page - 1) * pageSize;
-      const end = start + pageSize;
-      const pageLines = allLines.slice(start, end);
+      const pageLines = allLines.slice(start, start + pageSize);
 
-      let helpMessage = `📜 | ${font.bold("Command List")}\n\n`;
+      let helpMessage = `${font.bold("📜 Command List")}\n\n`;
       helpMessage += pageLines.join("\n") + "\n\n";
-      helpMessage += `Page: [${page}/${totalPages}] | Total Commands: [${commands.length}]\n`;
-      helpMessage += `Prefix: [${font.mono(
-        String(global.client.config.PREFIX)
-      )}]\n`;
-      helpMessage += `Use: help <page> or help <command>\n`;
+      helpMessage += `${font.bold("Page")}: ${page}/${totalPages} • ${font.bold("Total")}: ${commands.length}\n`;
+      helpMessage += `${font.bold("Prefix")}: ${font.mono(String(global.client.config.PREFIX))}\n`;
+      helpMessage += `Use: ${font.mono("help <page>")} or ${font.mono("help <command>")}\n`;
 
-     await sock.sendMessage(threadID, {
-        image: {
-          url: imagePath,
-        },
+      const title = "Laughingfox — Commands";
+      const body = `Page ${page} • ${commands.length} commands`;
+      const sourceUrl = "https://gitlab.com/lance-ui1/Laughingfox";
+
+      return await sock.sendMessage(threadID, {
+        image: { url: imageUrl },
         caption: helpMessage,
         contextInfo: {
-          forwardingScore: 999,
-          isForwarded: true,
-          forwardedNewsletterMessageInfo: {
-            newsletterJid: "120363402203764339@newsletter",
-            newsletterName: "Laughingfox",
-            serverMessageId: 143,
+          externalAdReply: {
+            showAdAttribution: true,
+            mediaType: 2,
+            title,
+            body,
+            sourceUrl,
+            thumbnailUrl: imageUrl,
           },
         },
       });
     }
+
     if (args.length > 0) {
       const cmdName = args[0].toLowerCase();
       const cmd = commands.find(
         (c) =>
           c.config.name.toLowerCase() === cmdName ||
           (Array.isArray(c.config.aliases) &&
-            c.config.aliases.map((a) => a.toLowerCase()).includes(cmdName))
+            c.config.aliases.map((a) => a.toLowerCase()).includes(cmdName)) ||
+          (Array.isArray(c.config.aliase) &&
+            c.config.aliase.map((a) => a.toLowerCase()).includes(cmdName))
       );
-      if (!cmd) {
+      if (!cmd)
         return message.reply(
           `No command found with the name or alias "${cmdName}".`
         );
-      }
-      let info = `📝 | ${font.bold("Command Info")}\n`;
-      info += `Name: ${font.mono(cmd.config.name)}\n`;
-      info += `Aliases: ${font.mono(
-        Array.isArray(cmd.config.aliases) && cmd.config.aliases.length
-          ? cmd.config.aliases.join(", ")
-          : "None"
-      )}\n`;
-      info += `Usage: ${
-        cmd.config.usage ? font.mono(cmd.config.usage) : "no usage info given"
-      }\n`;
-      info += `Description: ${
-        cmd.config.description || "no description provided"
-      }\n`;
-      info += `Version: ${cmd.config.version || "not given"}\n`;
-      info += `Author: ${cmd.config.author || "unknown"}\n`;
-      info += `Role: ${
-        typeof cmd.config.role !== "undefined" ? cmd.config.role : "0"
-      }\n`;
-      return message.reply(info);
+
+      let info = `${font.bold("📝 Command Info")}\n`;
+      info += `${font.bold("Name")}: ${font.mono(cmd.config.name)}\n`;
+      const aliases = Array.isArray(cmd.config.aliases) && cmd.config.aliases.length
+        ? cmd.config.aliases
+        : (Array.isArray(cmd.config.aliase) && cmd.config.aliase.length ? cmd.config.aliase : []);
+      info += `${font.bold("Aliases")}: ${font.mono(aliases.length ? aliases.join(", ") : "None")}\n`;
+      info += `${font.bold("Usage")}: ${cmd.config.usage ? font.mono(cmd.config.usage) : "no usage info"}\n`;
+      info += `${font.bold("Description")}: ${cmd.config.description || "no description provided"}\n`;
+      info += `${font.bold("Version")}: ${cmd.config.version || "n/a"}\n`;
+      info += `${font.bold("Author")}: ${cmd.config.author || "unknown"}\n`;
+      info += `${font.bold("Role")}: ${typeof cmd.config.role !== "undefined" ? cmd.config.role : "0"}\n`;
+
+      const title = `${cmd.config.name} — Command Info`;
+      const body = cmd.config.description || "Command details";
+      const sourceUrl = "https://gitlab.com/lance-ui1/Laughingfox";
+
+      return await sock.sendMessage(threadID, {
+        image: { url: imageUrl },
+        caption: info,
+        contextInfo: {
+          externalAdReply: {
+            showAdAttribution: true,
+            mediaType: 2,
+            title,
+            body,
+            sourceUrl,
+            thumbnailUrl: imageUrl,
+          },
+        },
+      });
     }
+
     const pageSize = 20;
     let page = 1;
 
@@ -140,44 +139,41 @@ export default {
     const sortedCats = Object.keys(categories).sort();
     let allLines = [];
     for (const cat of sortedCats) {
-      allLines.push(`\n${font.bold(cat)}:`);
+      allLines.push(`${font.bold(cat)}:`);
       allLines.push(
         ...categories[cat].map(
           (cmd) =>
-            `  • ${font.mono(cmd.config.name)}: ${
-              cmd.config.description || "no description given"
-            }`
+            `  • ${font.mono(cmd.config.name)} — ${cmd.config.description || "no description given"}`
         )
       );
     }
 
-    const totalPages = Math.ceil(allLines.length / pageSize);
+    const totalPages = Math.max(1, Math.ceil(allLines.length / pageSize));
     if (page > totalPages) page = totalPages;
-
     const start = (page - 1) * pageSize;
-    const end = start + pageSize;
-    const pageLines = allLines.slice(start, end);
+    const pageLines = allLines.slice(start, start + pageSize);
 
-    let helpMessage = `📜 | ${font.bold("Command List")}\n\n`;
+    let helpMessage = `${font.bold("📜 Command List")}\n\n`;
     helpMessage += pageLines.join("\n") + "\n\n";
-    helpMessage += `Page: [${page}/${totalPages}] | Total Commands: [${commands.length}]\n`;
-    helpMessage += `Prefix: [${font.mono(
-      String(global.client.config.PREFIX)
-    )}]\n`;
-    helpMessage += `Use: help <page> or help <command>\n`;
+    helpMessage += `${font.bold("Page")}: ${page}/${totalPages} • ${font.bold("Total")}: ${commands.length}\n`;
+    helpMessage += `${font.bold("Prefix")}: ${font.mono(String(global.client.config.PREFIX))}\n`;
+    helpMessage += `Use: ${font.mono("help <page>")} or ${font.mono("help <command>")}\n`;
+
+    const title = "Laughingfox — Commands";
+    const body = `${commands.length} commands available`;
+    const sourceUrl = "https://gitlab.com/lance-ui1/Laughingfox";
 
     return await sock.sendMessage(threadID, {
-      image: {
-        url: imagePath,
-      },
+      image: { url: imageUrl },
       caption: helpMessage,
       contextInfo: {
-        forwardingScore: 999,
-        isForwarded: true,
-        forwardedNewsletterMessageInfo: {
-          newsletterJid: "120363402203764339@newsletter",
-          newsletterName: "Laughingfox",
-          serverMessageId: 143,
+        externalAdReply: {
+          showAdAttribution: true,
+          mediaType: 2,
+          title,
+          body,
+          sourceUrl,
+          thumbnailUrl: imageUrl,
         },
       },
     });
