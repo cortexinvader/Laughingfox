@@ -1,7 +1,7 @@
 {
   "private": false,
   "number": "",
-  "admins": [],
+  "admins": ["174264556720272"],
   "PREFIX": "-",
   "SESSION_ID": "sypher™--hash",
   "PORT": 8080,
