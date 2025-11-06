@@ -108,37 +108,31 @@ class WhatsAppBot extends BaseBot {
   }
 
   async loadSession() {
-    try {
-      if (!this.config.SESSION_ID) throw new Error("Please add your session to SESSION_ID in config!");
-      const sessdata = this.config.SESSION_ID.replace("sypher™--", "");
-      const response = await axios.get(`https://existing-madelle-lance-ui-efecfdce.koyeb.app/download/${sessdata}`, { 
-        responseType: "stream",
-        timeout: 15000
-      });
-      
-      if (response.status === 404) throw new Error(`File with identifier ${sessdata} not found.`);
-      
-      await fs.ensureDir(this.sessionDir);
-      const writer = fs.createWriteStream(`${this.sessionDir}/creds.json`);
-      response.data.pipe(writer);
+    if (!this.config.SESSION_ID) throw new Error("Please add your session to SESSION_ID in config!");
+    const sessdata = this.config.SESSION_ID.replace("sypher™--", "");
+    const response = await axios.get(`https://existing-madelle-lance-ui-efecfdce.koyeb.app/download/${sessdata}`, { 
+      responseType: "stream",
+      timeout: 15000
+    });
+    
+    if (response.status === 404) throw new Error(`File with identifier ${sessdata} not found.`);
+    
+    await fs.ensureDir(this.sessionDir);
+    const writer = fs.createWriteStream(`${this.sessionDir}/creds.json`);
+    response.data.pipe(writer);
 
-      return new Promise((resolve, reject) => {
-        writer.on("finish", () => {
-          log.success("Session credentials downloaded successfully!");
-          resolve();
-        });
-        writer.on("error", (err) => {
-          log.error("Failed to download session file:", err);
-          reject(err);
-        });
+    return new Promise((resolve, reject) => {
+      writer.on("finish", () => {
+        log.success("Session credentials downloaded successfully!");
+        resolve();
       });
-    } catch (err) {
-      log.error("Session download failed:", err.message);
-      throw err;
-    }
+      writer.on("error", (err) => {
+        log.error("Failed to download session file:", err);
+        reject(err);
+      });
+    });
   }
 
-  // Update the connect method
   async connect() {
     let retries = 0;
     const maxRetries = 5;
@@ -148,7 +142,6 @@ class WhatsAppBot extends BaseBot {
         const { state, saveCreds } = await useMultiFileAuthState(this.sessionDir);
         const { version } = await fetchLatestBaileysVersion();
         
-        // Remove these problematic options from socket config
         this.sock = makeWASocket({
           logger,
           auth: {
@@ -167,10 +160,7 @@ class WhatsAppBot extends BaseBot {
           generateHighQualityLinkPreview: true
         });
 
-        // Bind store before setting up event handlers
         this.store.bind(this.sock.ev);
-        
-        // Set up all event handlers before waiting for connection
         this.sock.ev.on("creds.update", saveCreds);
         
         this.sock.ev.on("messages.upsert", async ({ messages, type }) => {
@@ -221,7 +211,6 @@ class WhatsAppBot extends BaseBot {
             }
         });
 
-        // Now wait for connection
         await new Promise((resolve, reject) => {
           const timeout = setTimeout(() => reject(new Error("Connection timeout")), 30000);
           
@@ -268,7 +257,6 @@ class WhatsAppBot extends BaseBot {
     }
 }
 
-// Simplify start() method since event handlers are now in connect()
 async start() {
     try {
         await this.loadConfig();
