@@ -161,7 +161,7 @@ class WhatsAppBot extends BaseBot {
         });
 
         this.store.bind(this.sock.ev);
-        this.sock.ev.on("creds.update", saveCreds);
+        this.sock.ev.on("creds.update", utils.saveCreds);
         
         this.sock.ev.on("messages.upsert", async ({ messages, type }) => {
             console.log(messages)
