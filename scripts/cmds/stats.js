@@ -1,5 +1,4 @@
 import os from "os";
-import si from "systeminformation";
 
 export default {
     config: {
@@ -15,9 +14,14 @@ export default {
             text: `...Loading...`
         });
 
-        const sysInfo = await si.system();
-        const cpuInfo = await si.cpu();
-        const memInfo = await si.mem();
+        const totalMemory = os.totalmem();
+        const freeMemory = os.freemem();
+        const usedMemory = totalMemory - freeMemory;
+        
+        const cpuCores = os.cpus();
+        const cpuModel = cpuCores[0].model;
+        const cpuSpeedGHz = (cpuCores[0].speed / 1000).toFixed(2); 
+
         const nodeInfo = process.versions.node;
         const latency = Date.now() - start;
 
@@ -28,14 +32,14 @@ export default {
 ${font.bold("Bot Status")}
 • Latency: ${latency}ms
 • Uptime: ${formatUptime(process.uptime() * 1000)}
-• CPU Cores: ${os.cpus().length}
-• CPU Model: ${cpuInfo.model}
-• CPU Speed: ${cpuInfo.speed} GHz
+• CPU Cores: ${cpuCores.length}
+• CPU Model: ${cpuModel}
+• CPU Speed: ${cpuSpeedGHz} GHz
 
 ${font.bold("Memory Usage")}
-• Total: ${formatBytes(memInfo.total)}
-• Used: ${formatBytes(memInfo.active)}
-• Free: ${formatBytes(memInfo.free)}
+• Total: ${formatBytes(totalMemory)}
+• Used: ${formatBytes(usedMemory)}
+• Free: ${formatBytes(freeMemory)}
 
 ${font.bold("System Info")}
 • Platform: ${os.platform()} (${os.arch()})
