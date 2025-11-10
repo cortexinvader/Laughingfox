@@ -26,7 +26,7 @@ export default {
         version: "1.0",
         author: "lance",
         countDown: 20,
-        role: 2,
+        role: 1,
         description: "Update bot files",
         category: "admin",
         guide: "{p}update"
