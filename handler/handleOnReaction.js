@@ -46,7 +46,8 @@ export default async ({
                         getTable,
                         getUserData,
                         getgroupData,
-                        getUserMoney
+                        getUserMoney,
+                        event
                     });
                 }
             }
