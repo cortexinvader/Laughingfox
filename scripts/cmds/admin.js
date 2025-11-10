@@ -4,9 +4,9 @@ import { fileURLToPath } from "url";
 
 export default {
   config: {
-    name: "admins",
+    name: "admin",
     description: "Add, remove, or list bot admins",
-    usage: ".admins add <@user>\n.admins remove <@user>\n.admins list",
+    usage: ".admin add <@user>\n.admin remove <@user>\n.admin list",
     role: 1,
     category: "admin"
   },
