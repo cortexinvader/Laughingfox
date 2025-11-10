@@ -8,16 +8,26 @@ import AdmZip from "adm-zip";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '../../');
 
+
+const CORE_PATHS = [
+    'scripts',
+    'utils',
+    'handler',
+    'cache',
+    'fox.js',
+    'index.js',
+    'package.json'
+];
+
 export default {
     config: {
         name: "update",
-        aliases: ["upd", "upgrade"],
+        aliase: ["upd", "upgrade"],
         version: "1.0",
-        author: "saul",
+        author: "lance",
         countDown: 20,
         role: 2,
-        shortDescription: "Update bot files",
-        longDescription: "Update bot core files from package.json source",
+        description: "Update bot files",
         category: "admin",
         guide: "{p}update"
     },
@@ -59,13 +69,6 @@ export default {
                 const configPath = path.join(rootDir, "config.json");
                 configBackup = await fs.readFile(configPath, 'utf8');
                 await sock.sendMessage(threadID, { text: "📦 Backing up config.json..." });
-
-                const pkgPath = path.join(rootDir, "package.json");
-                const pkg = await fs.readJson(pkgPath);
-                
-                if (!pkg.repository) {
-                    throw new Error("No repository URL found in package.json");
-                }
 
                 tempDir = path.join(rootDir, "temp_update");
                 await fs.ensureDir(tempDir);
