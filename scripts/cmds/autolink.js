@@ -12,7 +12,7 @@ const userDownloadLimits = new Map();
 
 const supportedPlatforms = {
     youtube: /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu\.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/,
-    facebook: /^(https?:\/\/)?(www\.)?(facebook|fb)\.(com|watch)\/.*$/,
+    facebook: /^(https?:\/\/)?((?:www|m|web)\.)?(facebook|fb)\.(com|watch)\/.*$/,
     instagram: /^(https?:\/\/)?(www\.)?(instagram\.com|instagr\.am)\/(?:p|reel)\/([A-Za-z0-9\-_]+)/,
     tiktok: /^(https?:\/\/)?(www\.)?(tiktok\.com)\/.*\/video\/(\d+)/,
     twitter: /^(https?:\/\/)?(www\.)?(twitter\.com|x\.com)\/\w+\/status\/\d+/
@@ -65,7 +65,7 @@ async function getVideoData(url) {
     try {
         const encodedUrl = encodeURIComponent(url);
         const response = await axios.get(`https://dev-priyanshi.onrender.com/api/alldl?url=${encodedUrl}`, {
-            timeout: 30000, // 30 second timeout
+            timeout: 30000,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
@@ -77,7 +77,6 @@ async function getVideoData(url) {
 
         const data = response.data.data;
         
-        // Always prefer high quality, fallback to low if high not available
         const downloadUrl = data.high || data.low;
         
         if (!downloadUrl) {
@@ -103,7 +102,7 @@ async function downloadVideo(videoData, sock, event, threadID) {
             url: videoData.downloadUrl,
             method: 'GET',
             responseType: 'stream',
-            timeout: 60000, // 60 second timeout for download
+            timeout: 60000,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
@@ -116,11 +115,10 @@ async function downloadVideo(videoData, sock, event, threadID) {
             writer.on('finish', () => resolve(videoPath));
             writer.on('error', reject);
             
-            // Add timeout for write operation
             setTimeout(() => {
                 writer.destroy();
                 reject(new Error('Download timeout'));
-            }, 120000); // 2 minute timeout
+            }, 120000);
         });
     } catch (error) {
         throw new Error(`Download failed: ${error.message}`);
@@ -130,7 +128,7 @@ async function downloadVideo(videoData, sock, event, threadID) {
 export default {
     config: {
         name: "autolink",
-        version: "4.0",
+        version: "4.1",
         author: "lance",
         countDown: 5,
         role: 0,
@@ -192,7 +190,6 @@ export default {
 
         if (urls.length === 0) return;
 
-        // Check rate limit
         if (!checkRateLimit(senderID)) {
             const resetTime = new Date(Date.now() + 3600000).toLocaleTimeString();
             return message.reply(
@@ -203,26 +200,20 @@ export default {
             );
         }
 
-        // Process each URL found
         for (const { url, platform } of urls) {
             const threadQueue = downloadQueue.get(threadID) || new Set();
 
-            // Skip if already processing this URL
             if (threadQueue.has(url)) continue;
             threadQueue.add(url);
             downloadQueue.set(threadID, threadQueue);
 
             try {
-                // Show processing reaction
                 message.react("⏳", event);
 
-                // Get video metadata and download URL
                 const videoData = await getVideoData(url);
                 
-                // Download the video
                 const videoPath = await downloadVideo(videoData, sock, event, threadID);
 
-                // Prepare message with video info
                 const messageBody = 
                     `🎥 Auto-Downloaded Video\n` +
                     `➤ Platform: ${platform.charAt(0).toUpperCase() + platform.slice(1)}\n` +
@@ -230,24 +221,21 @@ export default {
                     `➤ Quality: ${videoData.quality}\n` +
                     `➤ Original: ${url}`;
 
-                // Send video with metadata
                 await sock.sendMessage(threadID, { video: { url: videoPath }, caption: messageBody})
                 try {
-                  fs.unlinkSync(videoPath);
-                  threadQueue.delete(url);
-                  message.react("✅", event)
+                    fs.unlinkSync(videoPath);
+                    threadQueue.delete(url);
+                    message.react("✅", event)
                 } catch (cleanupError) {
-                  console.error('Cleanup error:', cleanupError);
-                  message.react("❌", event);
+                    console.error('Cleanup error:', cleanupError);
+                    message.react("❌", event);
                 }
             } catch (error) {
                 console.error(`Download error for ${url}:`, error.message);
                 
-                // Clean up queue and show error
                 threadQueue.delete(url);
                 message.react("❌", event);
                 
-                // Send error message (optional, can be removed to avoid spam)
                 message.reply(
                     `❌ Download failed for ${platform}\n` +
                     `➤ Error: ${error.message}\n` +
