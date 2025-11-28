@@ -150,7 +150,7 @@ class WhatsAppBot extends BaseBot {
           },
           version,
           printQRInTerminal: false,
-          browser: Browsers.macOS("Safari"),
+          browser: Browsers.ubuntu("Chrome"),
           msgRetryCounterCache,
           getMessage: async (key) => this.store.getMessage(key),
           markOnlineOnConnect: true,
