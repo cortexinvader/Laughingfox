@@ -2,7 +2,7 @@ import cron from 'node-cron';
 
 const scheduleExit = () => {
 
-  cron.schedule('0 */12 * * *', () => {
+  cron.schedule('0 */1 * * *', () => {
 
     console.log('Exiting process...');
 
@@ -10,7 +10,7 @@ const scheduleExit = () => {
 
   });
 
-  console.log('Process started. Will exit every 12 hours.');
+  console.log('Process started. Will exit every 1 hours.');
 
 };
 
