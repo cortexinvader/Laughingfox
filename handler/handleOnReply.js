@@ -31,7 +31,7 @@ export default async ({
     getPrefixesData,
     getTable,
     getUserData,
-    getgroupData,
+    getGroupData,
     getUserMoney
 }) => {
     const { replies, commands } = global.client;
@@ -57,7 +57,7 @@ export default async ({
                         getPrefixesData,
                         getTable,
                         getUserData,
-                        getgroupData,
+                        getGroupData,
                         getUserMoney,
                         event
                     });

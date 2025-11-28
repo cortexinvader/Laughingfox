@@ -1,146 +1,91 @@
-import db, { saveTable } from "../utils/data.js";
+import db, {
+  saveTable,
+  getUserMoney,
+  getUserData,
+  getPrefixesData,
+  setUserBanned,
+  setGroupBanned,
+} from "../utils/data.js";
 
-const userMoneyMap = new Map();
-const userDataMap = new Map();
-const prefixesDataMap = new Map();
-const groupDataMap = new Map();
-
-const initCache = async () => {
-  const userMoneyData = await db.getTable("userMoney");
-  const userData = await db.getTable("userData");
-  const prefixesData = await db.getTable("prefixesData");
-  const groupData = await db.getTable("groupData");
-
-  userMoneyData.forEach((user) => userMoneyMap.set(user.id, user));
-  userData.forEach((user) => userDataMap.set(user.id, user));
-  prefixesData.forEach((prefix) => prefixesDataMap.set(prefix.id, prefix));
-  groupData.forEach((group) =>
-    groupDataMap.set(`${group.id}-${group.uid}`, group),
-  );
+const updateUserData = async (data, table) => {
+  await saveTable(table, [data]);
 };
 
-initCache();
-
-const OMIT = 2 * 60 * 1000; // 2 minutes
-
-const saveData = async () => {
-  try {
-    await saveTable("userMoney", Array.from(userMoneyMap.values()));
-    await saveTable("userData", Array.from(userDataMap.values()));
-    await saveTable("prefixesData", Array.from(prefixesDataMap.values()));
-    await saveTable(
-      "groupData",
-      Array.from(groupDataMap.values()).map((group) => ({
-        id: group.id,
-        name: group.name,
-        uid: group.uid,
-        banned: group.banned,
-        msgCount: group.msgCount || 0,
-      })),
-    );
-  } catch (error) {
-    console.error("Error saving data:", error);
-  }
-};
-
-// Save every OMIT ms
-setInterval(saveData, OMIT);
-
-// Graceful shutdown (ensure async save completes)
-const shutdown = async () => {
-  await saveData();
-  process.exit(0);
-};
-
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
-process.on("SIGUSR1", shutdown);
-process.on("SIGUSR2", shutdown);
-process.on("exit", () => {});
+const updateGroupData = async (data) => {
+    await saveTable("groupData", [data]);
+}
 
 const handleDatabase = async ({ threadID, senderID, sock }) => {
   try {
-    if (!userMoneyMap.has(senderID)) {
-      userMoneyMap.set(senderID, { id: senderID, money: 0, msgCount: 0 });
+    let userMoney = await getUserMoney(senderID);
+    if (!userMoney.id) {
+      userMoney = { id: senderID, money: 0, msgCount: 0 };
+    }
+    userMoney.msgCount = (userMoney.msgCount || 0) + 1;
+    await updateUserData(userMoney, "userMoney");
+
+    let userData = await getUserData(senderID);
+    if (!userData.id) {
+      userData = { id: senderID, name: "Unknown", banned: 0, exp: 0, data: {} };
+      await updateUserData(userData, "userData");
     }
 
-    if (!userDataMap.has(senderID)) {
-      userDataMap.set(senderID, { id: senderID, name: "Unknown" });
-    }
+    const prefixesData = await db.getTable("prefixesData");
+    let prefixEntry = prefixesData.find((p) => p.id === threadID);
 
-    if (!prefixesDataMap.has(threadID)) {
-      prefixesDataMap.set(threadID, {
+    if (!prefixEntry) {
+      prefixEntry = {
         id: threadID,
         prefix: global.client.config.PREFIX,
-      });
-    }
-
-    if (
-      !groupDataMap.has(`${threadID}-${senderID}`) &&
-      threadID.endsWith("@g.us")
-    ) {
-      const groupMetadata = async () => {
-        const groupInfo = await sock.groupMetadata(threadID);
-        return groupInfo ? groupInfo.subject : "Unknown Group";
       };
-      const groupName = await groupMetadata();
-      groupDataMap.set(`${threadID}-${senderID}`, {
-        id: threadID,
-        name: groupName,
-        uid: senderID,
-        banned: 0,
-      });
+      await updateUserData(prefixEntry, "prefixesData");
     }
 
-    const userMoney = userMoneyMap.get(senderID);
-    if (userMoney) {
-      userMoney.msgCount = (userMoney.msgCount || 0) + 1;
-      userMoneyMap.set(senderID, userMoney);
-    }
+    if (threadID.endsWith("@g.us")) {
+      const groupDataArray = await db.getTable("groupData");
+      let groupData = groupDataArray.find(
+        (group) => group.id === threadID && group.uid === senderID
+      );
+      
+      if (!groupData) {
+        const groupMetadata = async () => {
+          const groupInfo = await sock.groupMetadata(threadID);
+          return groupInfo ? groupInfo.subject : "Unknown Group";
+        };
+        const groupName = await groupMetadata();
 
-    const groupData = groupDataMap.get(`${threadID}-${senderID}`);
-    if (groupData) {
+        groupData = {
+          id: threadID,
+          name: groupName,
+          uid: senderID,
+          banned: 0,
+          msgCount: 0,
+        };
+      }
+      
       groupData.msgCount = (groupData.msgCount || 0) + 1;
-      groupDataMap.set(`${threadID}-${senderID}`, groupData);
+      await updateGroupData(groupData);
     }
   } catch (e) {
-    console.log(e.message);
+    console.log(`Error in handleDatabase: ${e.message}`);
   }
 };
 
-const setuserBanned = async (userId, banned) => {
-  if (userDataMap.has(userId)) {
-    const userData = userDataMap.get(userId);
-    userData.banned = banned ? 1 : 0;
-    userDataMap.set(userId, userData);
-    await saveTable("userData", Array.from(userDataMap.values()));
-  }
+const setuserBannedDirect = async (userId, banned) => {
+  await setUserBanned(userId, banned);
 };
 
-const setgroupBanned = async (groupId, banned) => {
-  const groupDataArray = Array.from(groupDataMap.values());
-  const groupData = groupDataArray.find((group) => group.id === groupId);
-  if (groupData) {
-    groupData.banned = banned ? 1 : 0;
-    groupDataMap.set(`${groupData.id}-${groupData.uid}`, groupData);
-    await saveTable(
-      "groupData",
-      Array.from(groupDataMap.values()).map((group) => ({
-        id: group.id,
-        name: group.name,
-        uid: group.uid,
-        banned: group.banned,
-      })),
-    );
-  }
+const setgroupBannedDirect = async (groupId, banned) => {
+  await setGroupBanned(groupId, banned);
 };
 
 const dataCache = {
-  userMoney: userMoneyMap,
-  userData: userDataMap,
-  prefixesData: prefixesDataMap,
-  groupData: groupDataMap,
 };
 
-export { setgroupBanned, setuserBanned, handleDatabase, dataCache };
+export { 
+    setgroupBannedDirect as setgroupBanned, 
+    setuserBannedDirect as setuserBanned, 
+    handleDatabase, 
+    dataCache 
+};
 export default dataCache;

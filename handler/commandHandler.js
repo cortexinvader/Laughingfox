@@ -14,7 +14,7 @@ async function handler({
   getPrefixesData,
   getTable,
   getUserData,
-  getgroupData,
+  getGroupData,
   getUserMoney,
   setgroupBanned,
   setuserBanned
@@ -93,7 +93,7 @@ async function handler({
       getPrefixesData,
       getTable,
       getUserData,
-      getgroupData,
+      getGroupData,
       getUserMoney,
       setuserBanned,
       setgroupBanned
@@ -115,7 +115,7 @@ async function handler({
       getPrefixesData,
       getTable,
       getUserData,
-      getgroupData,
+      getGroupData,
       getUserMoney,
       setuserBanned,
       setgroupBanned

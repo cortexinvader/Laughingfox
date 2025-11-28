@@ -13,7 +13,7 @@ export default async ({
             getPrefixesData,
             getTable,
             getUserData,
-            getgroupData,
+            getGroupData,
             getUserMoney,
             setuserBanned,
             setgroupBanned
@@ -37,7 +37,7 @@ export default async ({
             getPrefixesData,
             getTable,
             getUserData,
-            getgroupData,
+            getGroupData,
             getUserMoney,
             setuserBanned,
             setgroupBanned
