@@ -15,7 +15,7 @@ const updateGroupData = async (data) => {
     await saveTable("groupData", [data]);
 }
 
-const handleDatabase = async ({ threadID, senderID, sock }) => {
+const handleDatabase = async ({ threadID, senderID, sock, event }) => {
   try {
     let userMoney = await getUserMoney(senderID);
     if (!userMoney.id) {
@@ -26,7 +26,7 @@ const handleDatabase = async ({ threadID, senderID, sock }) => {
 
     let userData = await getUserData(senderID);
     if (!userData.id) {
-      userData = { id: senderID, name: "Unknown", banned: 0, exp: 0, data: {} };
+      userData = { id: senderID, name: event.pushName, banned: 0, exp: 0, data: {} };
       await updateUserData(userData, "userData");
     }
 
