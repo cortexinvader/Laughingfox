@@ -4,6 +4,7 @@ function getStanzaId(message) {
   }
   return null;
 }
+
 export default async ({
     sock,
     event,
@@ -15,11 +16,9 @@ export default async ({
     bot,
     dataCache,
     saveTable,
-    getPrefixesData,
     getTable,
     getUserData,
-    getGroupData,
-    getUserMoney
+    getGroupData
 }) => {
     const { reactions, commands } = global.client;
     try {
@@ -42,11 +41,9 @@ export default async ({
                         data,
                         dataCache,
                         saveTable,
-                        getPrefixesData,
                         getTable,
                         getUserData,
                         getGroupData,
-                        getUserMoney,
                         event
                     });
                 }
@@ -59,4 +56,3 @@ export default async ({
         );
     }
 };
-
