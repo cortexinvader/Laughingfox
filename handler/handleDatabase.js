@@ -44,8 +44,7 @@ const handleDatabase = async ({ threadID, senderID, sock, event }) => {
     if (threadID.endsWith("@g.us")) {
       const groupDataArray = await db.getTable("groupData");
       let groupData = groupDataArray.find(
-        (group) => group.id === threadID && group.uid === senderID
-      );
+        (group) => group.id === threadID);
       
       if (!groupData) {
         const groupMetadata = async () => {
