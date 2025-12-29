@@ -19,8 +19,6 @@ const handleDatabase = async ({ threadID, senderID, sock, event }) => {
     
     userData.name = userData.name || event.pushName || "Unknown";
     userData.msgCount = (userData.msgCount || 0) + 1;
-    userData.money = (userData.money || 0) + 10; 
-
     await updateUserData(userData);
 
     if (threadID.endsWith("@g.us")) {
