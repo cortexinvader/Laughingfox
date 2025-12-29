@@ -11,63 +11,52 @@ async function handler({
   proto,
   dataCache,
   saveTable,
-  getPrefixesData,
   getTable,
   getUserData,
   getGroupData,
-  getUserMoney,
   setgroupBanned,
   setuserBanned
 }) {
   try {
     const { config, cooldowns } = global.client;
     const command = await global.client.commands.get(commandName.toLowerCase()) || await global.client.aliases.get(commandName.toLowerCase());
-    /**
-     * handle cooldown here
-     */
+
     const now = Date.now();
     const cooldownKey = `${senderID}_${commandName.toLowerCase()}`;
     const cooldownTime = command.config.cooldown || 0;
     const cooldownExpiration = cooldowns[cooldownKey] || 0;
     const secondsLeft = Math.ceil((cooldownExpiration - now) / 1000);
+
     if (cooldownExpiration && now < cooldownExpiration) {
       return message.send(
         `❌ | Please wait ${secondsLeft}s to use this command!`
       );
     }
     cooldowns[cooldownKey] = now + cooldownTime * 1000;
-    /**
-     * handle roles here
-     */
+
     const role = command.config?.role || 0;
     if (threadID.endsWith("@g.us")) {
       const metadata = await sock.groupMetadata(threadID);
       const groupAdmins = metadata.participants
         .filter((ad) => ad.admin !== null)
         .map((uid) => uid.id);
+
       if (role == 1) {
-        if (
-          !config.admins.includes(senderID.replace("@lid", ""))
-        ) {
+        if (!config.admins.includes(senderID.replace("@lid", ""))) {
           return message.reply(
             "❌ | the command that you are using can only be used by bot admins"
           );
         }
       }
+
       if (role == 2) {
-        if (threadID.endsWith("@g.us")) {
-          if (!groupAdmins.includes(senderID)) {
-            return message.reply(
-              "❌ | the command that you are using can only be used by group admins"
-            );
-          }
-        } else {
-          message.reply(
-            "❌ | the command that you are using can only be used in groups"
+        if (!groupAdmins.includes(senderID)) {
+          return message.reply(
+            "❌ | the command that you are using can only be used by group admins"
           );
         }
       }
-    }else{
+    } else {
       if (role == 1) {
         if (!event.key.fromMe) {
           return message.reply(
@@ -76,29 +65,29 @@ async function handler({
         }
       }
     }
-    if(command?.onLoad){
+
+    if (command?.onLoad) {
       await command.onLoad({
-      sock,
-      event,
-      args,
-      threadID,
-      senderID,
-      font,
-      commandName,
-      message,
-      bot,
-      proto,
-      dataCache,
-      saveTable,
-      getPrefixesData,
-      getTable,
-      getUserData,
-      getGroupData,
-      getUserMoney,
-      setuserBanned,
-      setgroupBanned
-    });
+        sock,
+        event,
+        args,
+        threadID,
+        senderID,
+        font,
+        commandName,
+        message,
+        bot,
+        proto,
+        dataCache,
+        saveTable,
+        getTable,
+        getUserData,
+        getGroupData,
+        setuserBanned,
+        setgroupBanned
+      });
     }
+
     return await command.onRun({
       sock,
       event,
@@ -112,11 +101,9 @@ async function handler({
       proto,
       dataCache,
       saveTable,
-      getPrefixesData,
       getTable,
       getUserData,
       getGroupData,
-      getUserMoney,
       setuserBanned,
       setgroupBanned
     });
@@ -126,6 +113,6 @@ async function handler({
     );
     throw new Error(e);
   }
-};
+}
 
 export default handler;
