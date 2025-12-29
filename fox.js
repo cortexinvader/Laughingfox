@@ -283,8 +283,8 @@ async start() {
         log.success("Bot is ready and listening for events!");
         
     } catch (error) {
-        log.error("Failed to start bot:", error);
-        process.exit(1);
+        log.error(`Failed to start bot: ${error.message}`);
+        process.exit(0);
     }
 }
 }
