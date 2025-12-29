@@ -57,9 +57,7 @@ const handleDatabase = async ({ threadID, senderID, sock, event }) => {
         groupData = {
           id: threadID,
           name: groupName,
-          uid: senderID,
           banned: 0,
-          msgCount: 0,
         };
       }
       
