@@ -6,12 +6,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let db;
-
 let isCacheLoaded = false;
+
 const dataCache = {
-  userMoney: [],
   userData: [],
-  prefixesData: [],
   groupData: [],
 };
 
@@ -20,24 +18,32 @@ export async function initSQLite() {
   db = new sqlite3.Database(dbPath);
 
   const tables = {
-    userMoney: `CREATE TABLE IF NOT EXISTS userMoney (id TEXT PRIMARY KEY, money INTEGER, msgCount INTEGER)`,
-    userData: `CREATE TABLE IF NOT EXISTS userData (id TEXT PRIMARY KEY, banned INTEGER DEFAULT 0, name TEXT, exp INTEGER, data TEXT)`,
-    prefixesData: `CREATE TABLE IF NOT EXISTS prefixesData (id TEXT PRIMARY KEY, prefix TEXT)`,
-    groupData: `CREATE TABLE IF NOT EXISTS groupData (id TEXT NOT NULL PRIMARY KEY, name TEXT, banned INTEGER DEFAULT 0)`,
+    userData: `CREATE TABLE IF NOT EXISTS userData (
+      id TEXT PRIMARY KEY, 
+      banned INTEGER DEFAULT 0, 
+      name TEXT, 
+      exp INTEGER DEFAULT 0, 
+      money INTEGER DEFAULT 0, 
+      msgCount INTEGER DEFAULT 0, 
+      data TEXT
+    )`,
+    groupData: `CREATE TABLE IF NOT EXISTS groupData (
+      id TEXT NOT NULL PRIMARY KEY, 
+      name TEXT, 
+      banned INTEGER DEFAULT 0
+    )`,
   };
 
   for (const sql of Object.values(tables)) {
     await runSQL(sql);
   }
-  
+
   await loadAllTablesIntoCache(); 
   isCacheLoaded = true;
 }
 
 async function loadAllTablesIntoCache() {
-  dataCache.userMoney = await loadTableFromDB("userMoney");
   dataCache.userData = await loadTableFromDB("userData");
-  dataCache.prefixesData = await loadTableFromDB("prefixesData");
   dataCache.groupData = await loadTableFromDB("groupData");
 }
 
@@ -61,15 +67,7 @@ function allSQL(sql, params = []) {
 
 async function loadTableFromDB(tableName) {
   try {
-    const rows = await allSQL(`SELECT * FROM ${tableName}`);
-    if (tableName === "userData") {
-      return rows.map((row) => ({
-        id: row.id,
-        name: row.name || "",
-        banned: row.banned || 0,
-      }));
-    }
-    return rows;
+    return await allSQL(`SELECT * FROM ${tableName}`);
   } catch (err) {
     if (err.message.includes("no such table")) return [];
     throw err;
@@ -80,49 +78,29 @@ export async function getTable(tableName) {
   return await loadTableFromDB(tableName); 
 }
 
-
-export async function getUserMoney(userId) {
-  const user = await allSQL("SELECT * FROM userMoney WHERE id = ?", [userId]);
-  return user.length > 0 ? user[0] : { money: 0, msgCount: 0 };
-}
-
 export async function getUserData(userId) {
   const user = await allSQL("SELECT * FROM userData WHERE id = ?", [userId]);
-  return user.length > 0 ? user[0] : {};
-}
-
-export async function getPrefixesData(threadId) { 
-  const prefixEntry = await allSQL("SELECT prefix FROM prefixesData WHERE id = ?", [threadId]);
-  return prefixEntry.length > 0 ? prefixEntry[0].prefix : "";
+  return user.length > 0 ? user[0] : { id: userId, money: 0, msgCount: 0, exp: 0, banned: 0, name: "" };
 }
 
 export async function getGroupData(groupId) {
-  const group = await allSQL("SELECT * FROM groupData WHERE id = ?", [groupId]);
-  return group;
+  return await allSQL("SELECT * FROM groupData WHERE id = ?", [groupId]);
 }
-
 
 export async function saveTable(tableName, data) {
   let insertSQL = "";
   let makeParams;
 
-  if (tableName === "userMoney") {
+  if (tableName === "userData") {
     insertSQL = `
-      INSERT INTO userMoney (id, money, msgCount)
-      VALUES (?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        money = excluded.money,
-        msgCount = excluded.msgCount
-    `;
-    makeParams = (item) => [item.id, item.money ?? 0, item.msgCount ?? 0];
-  } else if (tableName === "userData") {
-    insertSQL = `
-      INSERT INTO userData (id, banned, name, exp, data)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO userData (id, banned, name, exp, money, msgCount, data)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         banned = excluded.banned,
         name = excluded.name,
         exp = excluded.exp,
+        money = excluded.money,
+        msgCount = excluded.msgCount,
         data = excluded.data
     `;
     makeParams = (item) => [
@@ -130,16 +108,10 @@ export async function saveTable(tableName, data) {
       item.banned ?? 0,
       item.name ?? "",
       item.exp ?? 0,
+      item.money ?? 0,
+      item.msgCount ?? 0,
       item.data ? JSON.stringify(item.data) : null,
     ];
-  } else if (tableName === "prefixesData") {
-    insertSQL = `
-      INSERT INTO prefixesData (id, prefix)
-      VALUES (?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        prefix = excluded.prefix
-    `;
-    makeParams = (item) => [item.id, item.prefix];
   } else if (tableName === "groupData") {
     insertSQL = `
       INSERT INTO groupData (id, name, banned)
@@ -148,43 +120,27 @@ export async function saveTable(tableName, data) {
         name = excluded.name,
         banned = excluded.banned
     `;
-    makeParams = (item) => [
-      item.name,
-      item.banned ?? 0,
-    ];
+    makeParams = (item) => [item.id, item.name, item.banned ?? 0];
   }
 
-  const promises = [];
-  for (const item of data) {
-    promises.push(runSQL(insertSQL, makeParams(item)));
-  }
+  const promises = data.map(item => runSQL(insertSQL, makeParams(item)));
   await Promise.all(promises);
 }
 
 export async function setUserBanned(userId, banned = true) {
-  const existingUser = await getUserData(userId);
-  const dataToSave = {
-    id: userId,
-    banned: banned ? 1 : 0,
-    name: existingUser.name || "",
-    exp: existingUser.exp || 0,
-    data: existingUser.data || {},
-  };
-  await saveTable("userData", [dataToSave]);
-  return dataToSave;
+  const user = await getUserData(userId);
+  user.banned = banned ? 1 : 0;
+  await saveTable("userData", [user]);
+  return user;
 }
 
 export async function isUserBanned(userId) {
   const user = await getUserData(userId);
-  return user.id ? !!user.banned : false;
+  return !!user.banned;
 }
 
 export async function setGroupBanned(groupId, banned = true) {
-  const updateSQL = `
-    UPDATE groupData SET banned = ? WHERE id = ?
-  `;
-  await runSQL(updateSQL, [banned ? 1 : 0, groupId]);
-  
+  await runSQL(`UPDATE groupData SET banned = ? WHERE id = ?`, [banned ? 1 : 0, groupId]);
   return await getGroupData(groupId);
 }
 
@@ -197,13 +153,12 @@ export { dataCache };
 export default {
   initSQLite,
   getTable,
-  getUserMoney,
   getUserData,
-  getPrefixesData,
   getGroupData, 
   saveTable,
   isGroupBanned,
   isUserBanned,
   setUserBanned,
   setGroupBanned,
+  runSQL
 };
