@@ -23,7 +23,7 @@ export async function initSQLite() {
     userMoney: `CREATE TABLE IF NOT EXISTS userMoney (id TEXT PRIMARY KEY, money INTEGER, msgCount INTEGER)`,
     userData: `CREATE TABLE IF NOT EXISTS userData (id TEXT PRIMARY KEY, banned INTEGER DEFAULT 0, name TEXT, exp INTEGER, data TEXT)`,
     prefixesData: `CREATE TABLE IF NOT EXISTS prefixesData (id TEXT PRIMARY KEY, prefix TEXT)`,
-    groupData: `CREATE TABLE IF NOT EXISTS groupData (id TEXT NOT NULL, name TEXT, uid TEXT NOT NULL, msgCount INTEGER, banned INTEGER DEFAULT 0, PRIMARY KEY (id, uid))`,
+    groupData: `CREATE TABLE IF NOT EXISTS groupData (id TEXT NOT NULL PRIMARY KEY, name TEXT, banned INTEGER DEFAULT 0`,
   };
 
   for (const sql of Object.values(tables)) {
@@ -142,18 +142,14 @@ export async function saveTable(tableName, data) {
     makeParams = (item) => [item.id, item.prefix];
   } else if (tableName === "groupData") {
     insertSQL = `
-      INSERT INTO groupData (id, name, uid, msgCount, banned)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(id, uid) DO UPDATE SET
+      INSERT INTO groupData (id, name, banned)
+      VALUES (?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
-        msgCount = excluded.msgCount,
         banned = excluded.banned
     `;
     makeParams = (item) => [
-      item.id,
       item.name,
-      item.uid,
-      item.msgCount ?? 0,
       item.banned ?? 0,
     ];
   }
