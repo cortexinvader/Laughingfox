@@ -14,20 +14,15 @@ import db, {
   getGroupData,
   getTable,
   getUserData,
-  getUserMoney,
   saveTable,
 } from "../utils/data.js";
 
 class MessageHandler {
   constructor({ font, sock, log, proto }) {
     this.font = font;
-
     this.sock = sock;
-
     this.log = log;
-
     this.proto = proto;
-
     this.prefix = global.client.config.PREFIX;
   }
 
@@ -68,7 +63,6 @@ class MessageHandler {
         await this.sock.sendMessage(threadID, {
           text: `❌ | Command '${commandName}' does not exist. Type ${this.prefix}help to view all commands.`,
         });
-
         return;
       }
 
@@ -89,7 +83,6 @@ class MessageHandler {
         getTable,
         getUserData,
         getGroupData,
-        getUserMoney,
         setgroupBanned,
         setuserBanned,
       });
@@ -130,7 +123,6 @@ class MessageHandler {
           getTable,
           getUserData,
           getGroupData,
-          getUserMoney,
           setuserBanned,
           setgroupBanned,
         }),
@@ -150,7 +142,6 @@ class MessageHandler {
           getTable,
           getUserData,
           getGroupData,
-          getUserMoney,
           setuserBanned,
           setgroupBanned,
         }),
@@ -170,7 +161,6 @@ class MessageHandler {
           getTable,
           getUserData,
           getGroupData,
-          getUserMoney,
           setuserBanned,
           setgroupBanned,
         }),
@@ -183,15 +173,11 @@ class MessageHandler {
   async handleMessage(event) {
     try {
       const threadID = event.key.remoteJid;
-
       if (threadID === "status@broadcast") return;
 
       let senderID = event.key.participant || threadID.split("@")[0] + "@lid";
-
       let args = "";
-
       const msg = event.message;
-
       if (!msg) return;
 
       args =
@@ -260,28 +246,20 @@ class MessageHandler {
 
       const bot = {
         changeProfileStatus: (form) => this.sock.updateProfileStatus(form),
-
         changeProfileName: (form) => this.sock.updateProfileName(form),
-
         changeProfilePic: (filepath) =>
           this.sock.updateProfilePicture(threadID, { url: filepath }),
-
         removeProfilePic: (id) => this.sock.removeProfilePicture(id),
-
         createGroup: (_sock, name, members) =>
           this.sock.groupCreate(name, [members]),
-
         participants: (id, action) =>
           this.sock.groupParticipantsUpdate(threadID, [id], action),
-
         leave: (id) => this.sock.groupLeave(id),
-
         user: (id, action) => this.sock.updateBlockStatus(id, action),
       };
 
       await Promise.all([
         this.mainFunc({ senderID, threadID, event, message, args, bot }),
-
         this.helperFunc({ threadID, senderID, message, args, bot, event }),
       ]);
     } catch (e) {
@@ -292,6 +270,5 @@ class MessageHandler {
 
 export default async ({ font, sock, event, log, proto }) => {
   const messageHandler = new MessageHandler({ font, sock, log, proto });
-
   await messageHandler.handleMessage(event);
 };
