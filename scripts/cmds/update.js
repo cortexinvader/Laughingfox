@@ -64,16 +64,22 @@ export default {
 
         try {
             if (emoji === '👍') {
-                await sock.sendMessage(threadID, { text: "🔄 Starting update process..." });
+                const msg = await sock.sendMessage(threadID, { text: "starting update" });
 
                 const configPath = path.join(rootDir, "config.json");
                 configBackup = await fs.readFile(configPath, 'utf8');
-                await sock.sendMessage(threadID, { text: "📦 Backing up config.json..." });
+                await sock.sendMessage(threadID, {
+                    text: "Loading",
+                    edit: msg.key
+                });
 
                 tempDir = path.join(rootDir, "temp_update");
                 await fs.ensureDir(tempDir);
 
-                await sock.sendMessage(threadID, { text: "⬇️ Downloading latest version..." });
+                await sock.sendMessage(threadID, {
+                    text: "..Loading..",
+                    edit: msg.key
+                });
                 
                 const zipUrl = "https://github.com/lance-ui/Laughingfox/archive/refs/heads/main.zip"
                 
@@ -92,7 +98,10 @@ export default {
                     writer.on('error', reject);
                 });
 
-                await sock.sendMessage(threadID, { text: "📂 Extracting files..." });
+                await sock.sendMessage(threadID, {
+                    text: "....Loading....",
+                    edit: msg.key
+                });
 
                 const zip = new AdmZip(zipPath);
                 zip.extractAllTo(tempDir, true);
@@ -107,7 +116,10 @@ export default {
 
                 const sourceDir = path.join(tempDir, extractedDir);
 
-                await sock.sendMessage(threadID, { text: "🔄 Updating core files..." });
+                await sock.sendMessage(threadID, {
+                    text: "......Loading......",
+                    edit: msg.key
+                });
                 
                 for (const corePath of CORE_PATHS) {
                     const sourcePath = path.join(sourceDir, corePath);
@@ -121,7 +133,10 @@ export default {
                     }
                 }
 
-                await sock.sendMessage(threadID, { text: "🔄 Restoring config.json..." });
+                await sock.sendMessage(threadID, {
+                    text: "update completed restoring config.json",
+                    edit: msg.key
+                });
                 await fs.writeFile(configPath, configBackup);
 
                 if (zipPath && await fs.pathExists(zipPath)) {
@@ -132,11 +147,10 @@ export default {
                 }
 
                 await sock.sendMessage(threadID, {
-                    text: "✅ Update completed successfully!\n\n" +
-                          "Updated files/folders:\n" +
-                          CORE_PATHS.join('\n') +
-                          "\n\nPlease restart the bot to apply changes."
+                    text: "✅ Update completed successfully!\nrestarting",
+                    edit: msg.key
                 });
+                await process.exit(2)
 
             } else if (emoji === '👎') {
                 await sock.sendMessage(threadID, { text: "❌ Update cancelled." });
