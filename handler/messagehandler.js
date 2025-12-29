@@ -113,7 +113,7 @@ class MessageHandler {
         return;
 
       await Promise.all([
-        handleDatabase({ threadID, senderID, sock: this.sock }),
+        handleDatabase({ threadID, senderID, sock: this.sock, event }),
 
         handleOnReply({
           sock: this.sock,
