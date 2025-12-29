@@ -28,11 +28,9 @@ export default async ({
     args,
     dataCache,
     saveTable,
-    getPrefixesData,
     getTable,
     getUserData,
-    getGroupData,
-    getUserMoney
+    getGroupData
 }) => {
     const { replies, commands } = global.client;
     try {
@@ -54,11 +52,9 @@ export default async ({
                         data,
                         dataCache,
                         saveTable,
-                        getPrefixesData,
                         getTable,
                         getUserData,
                         getGroupData,
-                        getUserMoney,
                         event
                     });
                 }
