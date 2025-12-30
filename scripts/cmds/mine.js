@@ -154,7 +154,7 @@ const generateBoardImage = async (game) => {
                 ctx.fillStyle = flagColor;
                 ctx.fillRect(x, y, cellSize, cellSize);
                 ctx.fillStyle = '#000000';
-                ctx.fillText('🚩', x + cellSize / 2, y + cellSize / 2);
+                ctx.fillText('f', x + cellSize / 2, y + cellSize / 2);
             } else if (!isRevealed) {
                 ctx.fillStyle = hiddenColor;
                 ctx.fillRect(x, y, cellSize, cellSize);
@@ -171,7 +171,7 @@ const generateBoardImage = async (game) => {
                     ctx.fillStyle = mineColor;
                     ctx.fillRect(x, y, cellSize, cellSize);
                     ctx.fillStyle = '#000000';
-                    ctx.fillText('💣', x + cellSize / 2, y + cellSize / 2);
+                    ctx.fillText('b', x + cellSize / 2, y + cellSize / 2);
                 } else {
                     ctx.fillStyle = revealedColor;
                     ctx.fillRect(x, y, cellSize, cellSize);
