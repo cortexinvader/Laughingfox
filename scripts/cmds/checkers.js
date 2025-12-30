@@ -265,9 +265,8 @@ export default {
     config: {
         name: "checkers",
         cooldown: 5,
-        aliases: ["draughts"],
         description: "Play a game of checkers with image-based board",
-        category: "game",
+        category: "games",
         usage: `${global.client.config.PREFIX}checkers`,
         author: "lance"
     },
