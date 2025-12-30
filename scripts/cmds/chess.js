@@ -95,7 +95,7 @@ export default {
         cooldown: 5,
         aliase: ["chessgame"],
         description: "Play a game of chess. The board rotates for the current player.",
-        category: "game",
+        category: "games",
         usage: `${global.client.config.PREFIX}chess`
     },
 
