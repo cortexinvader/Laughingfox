@@ -4,6 +4,7 @@
   "admins": ["174264556720272"],
   "PREFIX": "-",
   "SESSION_ID": "sypher™--hash",
+  "usenv": false, 
   "PORT": 8080,
   "autoload": true,
   "keys": {
