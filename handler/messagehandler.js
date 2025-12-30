@@ -173,7 +173,6 @@ class MessageHandler {
   async handleMessage(event) {
     try {
       const threadID = event.key.remoteJid;
-      if (threadID === "status@broadcast") return;
 
       let senderID = event.key.participant || threadID.split("@")[0] + "@lid";
       let args = "";
