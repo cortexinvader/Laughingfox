@@ -108,6 +108,9 @@ class WhatsAppBot extends BaseBot {
   }
 
   async loadSession() {
+    if(this.config.usenv){
+      this.config.SESSION_ID = process.env.SESSION_ID;
+    }
     if (!this.config.SESSION_ID) throw new Error("Please add your session to SESSION_ID in config!");
     const sessdata = this.config.SESSION_ID.replace("sypher™--", "");
     const response = await axios.get(`https://existing-madelle-lance-ui-efecfdce.koyeb.app/download/${sessdata}`, { 
