@@ -7,7 +7,6 @@ import {
   handleDatabase,
   setgroupBanned,
   setuserBanned,
-  dataCache,
 } from "./handleDatabase.js";
 
 import db, {
@@ -15,6 +14,7 @@ import db, {
   getTable,
   getUserData,
   saveTable,
+  dataCache
 } from "../utils/data.js";
 
 class MessageHandler {
