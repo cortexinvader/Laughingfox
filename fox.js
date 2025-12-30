@@ -170,6 +170,7 @@ class WhatsAppBot extends BaseBot {
                 for (const event of messages) {
                     if (!event) continue;
                     const jid = event.key.remoteJid || event.key.participant;
+                    if (jid === "status@broadcast") return;
                     await this.sock.sendPresenceUpdate('available',jid)
                     try {
                         await messageHandler({ 
