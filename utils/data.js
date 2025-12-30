@@ -160,5 +160,6 @@ export default {
   isUserBanned,
   setUserBanned,
   setGroupBanned,
-  runSQL
+  runSQL,
+  dataCache
 };
